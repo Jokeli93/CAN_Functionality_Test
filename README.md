@@ -1,0 +1,16 @@
+Debug/
+
+Release/
+
+\*.o
+
+\*.d
+
+\*.su
+
+\*.elf
+
+\*.map
+
+.settings/
+
