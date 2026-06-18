@@ -12,9 +12,10 @@ void Error_Handler(void);
 void SystemClock_Config_HSE(uint8_t clock_freq);
 void GPIO_Init(void);
 void UART2_Init(void);
+void CAN1_Init(void);
 
 UART_HandleTypeDef huart2;
-TIM_HandleTypeDef htimer2;
+CAN_HandleTypeDef hcan1;
 
 
 int main(void)
@@ -28,6 +29,7 @@ int main(void)
 
 	UART2_Init();
 
+	CAN1_Init();
 
 	while(1);
 
@@ -63,6 +65,30 @@ void UART2_Init(void)
 		//there is a problem
 		Error_Handler();
 	}
+}
+
+void CAN1_Init(void)
+{
+	//Settings related  to the CAN controller
+	hcan1.Instance = CAN1;
+	hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+	hcan1.Init.AutoBusOff = DISABLE;
+	hcan1.Init.AutoRetransmission = ENABLE;
+	hcan1.Init.AutoWakeUp = DISABLE;
+	hcan1.Init.ReceiveFifoLocked = DISABLE;
+	hcan1.Init.TimeTriggeredMode = DISABLE;
+	hcan1.Init.TransmitFifoPriority = DISABLE;
+
+	//Settings related to the CAN bit timings
+	hcan1.Init.Prescaler = 5;
+	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+	hcan1.Init.TimeSeg1 = CAN_BS1_8TQ;
+	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+
+	//Initialization of CAN1 peripheral
+	if(HAL_CAN_Init(&hcan1) != HAL_OK)
+		Error_Handler();
+
 }
 
 /**
