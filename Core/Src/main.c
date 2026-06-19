@@ -32,6 +32,10 @@ int main(void)
 
 	CAN1_Init();
 
+	//move CAN peripheral into normal mode
+	if(HAL_CAN_Start(&hcan1) != HAL_OK)
+		Error_Handler();
+
 	CAN1_TX();
 
 	while(1);
