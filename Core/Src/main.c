@@ -13,6 +13,7 @@ void SystemClock_Config_HSE(uint8_t clock_freq);
 void GPIO_Init(void);
 void UART2_Init(void);
 void CAN1_Init(void);
+void CAN1_TX(void);
 
 UART_HandleTypeDef huart2;
 CAN_HandleTypeDef hcan1;
@@ -30,6 +31,8 @@ int main(void)
 	UART2_Init();
 
 	CAN1_Init();
+
+	CAN1_TX();
 
 	while(1);
 
@@ -90,6 +93,32 @@ void CAN1_Init(void)
 		Error_Handler();
 
 }
+
+void CAN1_TX(void)
+{
+	char msg[50];
+
+	CAN_TxHeaderTypeDef TxHeader;
+
+	uint32_t TxMailbox;
+
+	uint8_t our_message[] = {'H', 'A', 'L', 'L', 'O'};
+
+	TxHeader.DLC = 5;
+	TxHeader.StdId = 0x65D;
+	TxHeader.IDE = CAN_ID_STD;
+	TxHeader.RTR = CAN_RTR_DATA;
+
+	if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, our_message, &TxMailbox) != HAL_OK)
+		Error_Handler();
+
+	while(HAL_CAN_IsTxMessagePending(&hcan1, TxMailbox));
+
+	sprintf(msg, "Message transmitted\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+}
+
 
 /**
   * @brief System Clock Configuration
