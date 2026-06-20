@@ -87,10 +87,16 @@ void CAN1_Init(void)
 	hcan1.Init.TransmitFifoPriority = DISABLE;
 
 	//Settings related to the CAN bit timings
-	hcan1.Init.Prescaler = 5;
+	hcan1.Init.Prescaler = 5; // 25 MHz / 5 = 5 MHz CAN-Takt
 	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-	hcan1.Init.TimeSeg1 = CAN_BS1_8TQ;
-	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+	//hcan1.Init.TimeSeg1 = CAN_BS1_8TQ;
+	hcan1.Init.TimeSeg1 = CAN_BS1_7TQ;
+	//hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+	hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
+	/*---------------------------------------------------------*/
+	// Total-TQ = 1 (Sync) + 7 (BS1) + 2 (BS2) = 10 TQ
+	// Sample Point = (1 + 7) / 10 = 80% (perfect standard value!)
+	//Baudrate = 5 MHz / 10 TQ = 500 Kbit/s
 
 	//Initialization of CAN1 peripheral
 	if(HAL_CAN_Init(&hcan1) != HAL_OK)
@@ -108,14 +114,17 @@ void CAN1_TX(void)
 
 	uint8_t our_message[] = {'H', 'A', 'L', 'L', 'O'};
 
+	//CAN header configuration
 	TxHeader.DLC = 5;
 	TxHeader.StdId = 0x65D;
 	TxHeader.IDE = CAN_ID_STD;
 	TxHeader.RTR = CAN_RTR_DATA;
 
+	//Add message to the first free Tx mailbox and set the transmission request bit (TXRQ = 1).
 	if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, our_message, &TxMailbox) != HAL_OK)
 		Error_Handler();
 
+	//Wait  until there is no pending transmission request (Mailbox has the highest priority)
 	while(HAL_CAN_IsTxMessagePending(&hcan1, TxMailbox));
 
 	sprintf(msg, "Message transmitted\r\n");

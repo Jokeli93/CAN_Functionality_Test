@@ -31,7 +31,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
 	//here we do the low level Inits of the USART2 peripheral
 
-	//1. enable the clock of the USART2 and GPIOA peripheral
+	//1. enable the clock of the USART2 and GPIOA peripherals
 	__HAL_RCC_USART2_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 
@@ -54,10 +54,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
 void HAL_CAN_MspInit(CAN_HandleTypeDef *hcan)
 {
-	GPIO_InitTypeDef gpio_can;;
+	GPIO_InitTypeDef gpio_can = {0};
 
-	//Enable the clock for the CAN1 peripheral
+	//Enable the clock of the CAN1 and GPIOD peripherals
 	__HAL_RCC_CAN1_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
 
 	/*CAN1 GPIO configuration
 	PD0 --> CAN1_RX
