@@ -13,6 +13,7 @@ void SystemClock_Config_HSE(uint8_t clock_freq);
 void GPIO_Init(void);
 void UART2_Init(void);
 void CAN1_Init(void);
+void CAN_Filter_Config(void);
 void CAN1_TX(void);
 void CAN1_RX(void);
 
@@ -31,9 +32,13 @@ int main(void)
 
 	UART2_Init();
 
+	//move CAN peripheral from sleep mode in to initialization mode
 	CAN1_Init();
 
-	//move CAN peripheral into normal mode
+	//CAN filter configuration
+	CAN_Filter_Config();
+
+	//move CAN peripheral from initialization mode in to normal mode
 	if(HAL_CAN_Start(&hcan1) != HAL_OK)
 		Error_Handler();
 
@@ -79,7 +84,7 @@ void UART2_Init(void)
 
 void CAN1_Init(void)
 {
-	//Settings related  to the CAN controller
+	//Settings related to the CAN controller
 	hcan1.Instance = CAN1;
 	hcan1.Init.Mode = CAN_MODE_LOOPBACK;
 	hcan1.Init.AutoBusOff = DISABLE;
@@ -107,6 +112,26 @@ void CAN1_Init(void)
 
 }
 
+void CAN_Filter_Config(void)
+{
+	CAN_FilterTypeDef can1_filter_init;
+
+	//Settings related to the CAN filter
+	can1_filter_init.FilterActivation = ENABLE;
+	can1_filter_init.FilterBank = 0;
+	can1_filter_init.FilterFIFOAssignment = CAN_RX_FIFO0;
+	can1_filter_init.FilterIdHigh = 0x0000;
+	can1_filter_init.FilterIdLow = 0x0000;
+	can1_filter_init.FilterMaskIdHigh = 0x0000;
+	can1_filter_init.FilterMaskIdLow = 0x0000;
+	can1_filter_init.FilterMode = CAN_FILTERMODE_IDMASK;
+	can1_filter_init.FilterScale = CAN_FILTERSCALE_32BIT;
+
+	//Filter initialization
+	if(HAL_CAN_ConfigFilter(&hcan1, &can1_filter_init) != HAL_OK)
+		Error_Handler();
+}
+
 void CAN1_TX(void)
 {
 	char msg[50];
@@ -115,7 +140,7 @@ void CAN1_TX(void)
 
 	uint32_t TxMailbox;
 
-	uint8_t our_message[] = {'H', 'A', 'L', 'L', 'O'};
+	uint8_t our_message[] = {'H', 'E', 'L', 'L', 'O'};
 
 	//CAN header configuration
 	TxHeader.DLC = 5;
@@ -142,7 +167,7 @@ void CAN1_RX(void)
 	uint8_t rcvd_msg[5];
 
 	//first wait for at least one message in to the RX_FIFO0
-	while(! HAL_CAN_GetRxFifoFillLevel(hcan1, CAN_RX_FIFO0));
+	while(! HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0));
 
 	//Now get the CAN frame from RX_FIFO0
 	if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, rcvd_msg) != HAL_OK)
