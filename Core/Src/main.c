@@ -14,6 +14,7 @@ void GPIO_Init(void);
 void UART2_Init(void);
 void CAN1_Init(void);
 void CAN1_TX(void);
+void CAN1_RX(void);
 
 UART_HandleTypeDef huart2;
 CAN_HandleTypeDef hcan1;
@@ -37,6 +38,8 @@ int main(void)
 		Error_Handler();
 
 	CAN1_TX();
+
+	CAN1_RX();
 
 	while(1);
 
@@ -130,6 +133,23 @@ void CAN1_TX(void)
 	sprintf(msg, "Message transmitted\r\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
+}
+
+void CAN1_RX(void)
+{
+	CAN_RxHeaderTypeDef RxHeader;
+	char  msg[50];
+	uint8_t rcvd_msg[5];
+
+	//first wait for at least one message in to the RX_FIFO0
+	while(! HAL_CAN_GetRxFifoFillLevel(hcan1, CAN_RX_FIFO0));
+
+	//Now get the CAN frame from RX_FIFO0
+	if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, rcvd_msg) != HAL_OK)
+		Error_Handler();
+
+	sprintf(msg, "Received message: %s\r\n", rcvd_msg);
+	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 }
 
 
