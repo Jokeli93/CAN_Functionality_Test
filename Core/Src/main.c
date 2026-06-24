@@ -276,6 +276,7 @@ void SystemClock_Config_HSE(uint8_t clock_freq )
 	HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
+
 void Error_Handler(void)
 {
 	while(1);

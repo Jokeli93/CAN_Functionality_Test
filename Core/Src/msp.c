@@ -70,4 +70,15 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef *hcan)
 	gpio_can.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	gpio_can.Alternate = GPIO_AF9_CAN1;
 	HAL_GPIO_Init(GPIOD, &gpio_can);
+
+	//Enable the IRQ and set up the priority (NVIC settings)
+	HAL_NVIC_EnableIRQ(CAN1_TX_IRQn);
+	HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
+	HAL_NVIC_EnableIRQ(CAN1_RX1_IRQn);
+	HAL_NVIC_EnableIRQ(CAN1_SCE_IRQn);
+
+	HAL_NVIC_SetPriority(CAN1_TX_IRQn, 15, 0);
+	HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 15, 0);
+	HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 15, 0);
+	HAL_NVIC_SetPriority(CAN1_SCE_IRQn, 15, 0);
 }
