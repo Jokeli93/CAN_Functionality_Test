@@ -38,13 +38,17 @@ int main(void)
 	//CAN filter configuration
 	CAN_Filter_Config();
 
+	//Enable interrupts for the CAN1 peripheral
+	if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_TX_MAILBOX_EMPTY | CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_BUSOFF))
+		Error_Handler();
+
 	//move CAN peripheral from initialization mode in to normal mode
 	if(HAL_CAN_Start(&hcan1) != HAL_OK)
 		Error_Handler();
 
 	CAN1_TX();
 
-	CAN1_RX();
+	//CAN1_RX();
 
 	while(1);
 
@@ -134,7 +138,6 @@ void CAN_Filter_Config(void)
 
 void CAN1_TX(void)
 {
-	char msg[50];
 
 	CAN_TxHeaderTypeDef TxHeader;
 
@@ -151,12 +154,6 @@ void CAN1_TX(void)
 	//Add message to the first free Tx mailbox and set the transmission request bit (TXRQ = 1).
 	if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, our_message, &TxMailbox) != HAL_OK)
 		Error_Handler();
-
-	//Wait  until there is no pending transmission request (Mailbox has the highest priority)
-	while(HAL_CAN_IsTxMessagePending(&hcan1, TxMailbox));
-
-	sprintf(msg, "Message transmitted\r\n");
-	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 }
 
@@ -276,6 +273,47 @@ void SystemClock_Config_HSE(uint8_t clock_freq )
 	HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
+void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+	char msg[50];
+	sprintf(msg, "Message transmitted:M0\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+}
+
+void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+	char msg[50];
+	sprintf(msg, "Message transmitted:M1\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+}
+
+void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+	char msg[50];
+	sprintf(msg, "Message transmitted:M2\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+	CAN_RxHeaderTypeDef RxHeader;
+	char  msg[50];
+	uint8_t rcvd_msg[5];
+
+	//Now get the CAN frame from RX_FIFO0
+	if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, rcvd_msg) != HAL_OK)
+		Error_Handler();
+
+	sprintf(msg, "Received message: %s\r\n", rcvd_msg);
+	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+}
+
+void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan)
+{
+	char msg[50];
+	sprintf(msg, "CAN Error detected\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+}
 
 void Error_Handler(void)
 {
